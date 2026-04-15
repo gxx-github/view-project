@@ -1,0 +1,23 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
+bun.lock
+
+# Build
+.next/
+dist/
+out/
+
+# Environment & secrets
+.env
+.env.local
+.env*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

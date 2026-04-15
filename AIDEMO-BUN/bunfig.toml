@@ -1,0 +1,10 @@
+# Bun 运行时配置
+# 文档: https://bun.sh/docs/runtime/bunfig
+
+[install]
+# 使用国内镜像加速（可选）
+# registry = "https://registry.npmmirror.com"
+
+[run]
+# Bun 直接运行 .ts 文件，无需 tsx/ts-node
+# Bun 内置支持 JSX/TSX，无需额外配置
