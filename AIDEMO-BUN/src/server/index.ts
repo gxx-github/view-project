@@ -2,7 +2,7 @@
 // 运行: bun run src/server/index.ts
 // 这展示了 Bun 相对于 Node.js 的原生 API 优势
 
-import { DRAMA_DB, type DramaRecord } from "../lib/data/dramas";
+import { DRAMA_DB } from "../lib/data/dramas";
 
 const PORT = 3001;
 

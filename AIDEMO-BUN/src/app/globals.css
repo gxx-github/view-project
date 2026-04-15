@@ -58,3 +58,45 @@ body {
   backdrop-filter: blur(0.75rem);
   -webkit-backdrop-filter: blur(0.75rem);
 }
+
+/* Sidebar transitions */
+aside {
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Markdown body styles */
+.markdown-body {
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.markdown-body pre {
+  margin: 0.5rem 0;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.markdown-body hr {
+  border: none;
+  border-top: 1px solid rgba(236, 72, 153, 0.2);
+  margin: 0.75rem 0;
+}
+
+.markdown-body img {
+  max-width: 100%;
+  border-radius: 0.75rem;
+}
+
+/* Drag-and-drop overlay */
+.drag-active {
+  position: relative;
+}
+
+.drag-active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 2px dashed rgba(236, 72, 153, 0.5);
+  border-radius: inherit;
+  pointer-events: none;
+}

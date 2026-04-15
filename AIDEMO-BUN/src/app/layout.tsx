@@ -9,8 +9,8 @@ const geistSans = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "甜剧推荐 · Sweet Drama AI",
-  description: "情绪化小甜剧智能推荐引擎",
+  title: "影视推荐助手 · TV Drama AI",
+  description: "AI 影视推荐助手 — 联网搜索任意电视剧、演员作品",
 };
 
 export default function RootLayout({

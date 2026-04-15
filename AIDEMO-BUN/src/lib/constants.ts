@@ -1,12 +1,10 @@
-import type { Drama } from "./types";
-
 export const WELCOME = {
   id: "welcome",
   role: "assistant" as const,
   parts: [
     {
       type: "text" as const,
-      text: "嗨～我是甜甜，你的小甜剧推荐官 🌸\n告诉我你现在的心情，我来帮你找到最治愈的那部剧吧！",
+      text: "嗨～我是甜甜，你的影视推荐助手 🌸\n\n我可以帮你：\n- 🔍 搜索任意电视剧、演员作品（如「李乃文的剧」）\n- 📺 推荐最新热播剧、口碑好剧\n- 🎭 根据心情推荐适合的剧\n- 📊 查看剧集评分和介绍\n\n直接告诉我你想看什么吧～",
     },
   ],
 };
@@ -33,4 +31,5 @@ export const TOOL_LABELS: Record<string, string> = {
   "tool-getRating": "查询评分中",
   "tool-getTrending": "获取榜单中",
   "tool-renderDramaCard": "生成推荐卡片中",
+  "tool-webSearch": "联网搜索中",
 };
