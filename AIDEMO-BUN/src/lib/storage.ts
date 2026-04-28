@@ -1,7 +1,15 @@
+/**
+ * 客户端 localStorage 持久化（用于 client-side hooks）
+ * 服务端数据库操作请用 storage.server.ts
+ */
 import type { SessionMeta, SessionStore } from "./types";
 
 const SESSIONS_KEY = "aidemo-bun-sessions";
 const MSGS_KEY_PREFIX = "aidemo-bun-msgs-";
+
+function isBrowser(): boolean {
+  return typeof window !== "undefined" && typeof localStorage !== "undefined";
+}
 
 function safeJsonParse<T>(json: string | null, fallback: T): T {
   if (!json) return fallback;
@@ -12,14 +20,8 @@ function safeJsonParse<T>(json: string | null, fallback: T): T {
   }
 }
 
-function isBrowser(): boolean {
-  return typeof window !== "undefined" && typeof localStorage !== "undefined";
-}
-
 export function getSessions(): SessionStore {
-  if (!isBrowser()) {
-    return { sessions: [], activeSessionId: "" };
-  }
+  if (!isBrowser()) return { sessions: [], activeSessionId: "" };
   const raw = localStorage.getItem(SESSIONS_KEY);
   return safeJsonParse<SessionStore>(raw, { sessions: [], activeSessionId: "" });
 }
@@ -29,7 +31,7 @@ export function saveSessions(store: SessionStore): void {
   try {
     localStorage.setItem(SESSIONS_KEY, JSON.stringify(store));
   } catch {
-    // localStorage quota exceeded — ignore
+    // quota exceeded
   }
 }
 
@@ -40,12 +42,12 @@ export function getMessages(sessionId: string): unknown[] | null {
   return safeJsonParse<unknown[] | null>(raw, null);
 }
 
-export function saveMessages(sessionId: string, messages: unknown[]): void {
+export function saveMessages(sessionId: string, msgs: unknown[]): void {
   if (!isBrowser()) return;
   try {
-    localStorage.setItem(`${MSGS_KEY_PREFIX}${sessionId}`, JSON.stringify(messages));
+    localStorage.setItem(`${MSGS_KEY_PREFIX}${sessionId}`, JSON.stringify(msgs));
   } catch {
-    // localStorage quota exceeded — ignore
+    // quota exceeded
   }
 }
 

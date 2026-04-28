@@ -1,3 +1,144 @@
+# v0.4.0 — 面试级全栈 AI 工程升级
+
+> 基于 `aidemo升级计划.md` 方案三/四 + `frontend-ai-learning-plan.md` 阶段三~六，完成 TMDB Tool Calling、RAG 语义检索、生产级工程、Agent 可视化等全面升级。
+
+---
+
+## 架构总览
+
+```
+v0.3.0（联网搜索）                    v0.4.0（Agent + RAG + 生产化）
+┌──────────────────────┐             ┌──────────────────────────────────────────┐
+│ route.ts (200行)      │             │ route.ts (17行)                           │
+│ detectIntent()       │             │ ↓                                        │
+│ ↓                    │     →       │ ToolLoopAgent (8 个工具)                   │
+│ Tavily → Zhipu       │             │ ├─ tmdbSearch    精确搜索（TMDB API）       │
+│ ↓                    │             │ ├─ tmdbGetDetails 详情+演员+海报           │
+│ 手动 JSON 解析       │             │ ├─ tmdbGetTrending 热播榜                  │
+│ ↓                    │             │ ├─ tmdbGetByActor 演员作品                 │
+│ renderDramaCard      │             │ ├─ ragSearch     语义搜索（向量检索）       │
+│                      │             │ ├─ compareDramas 剧集对比                  │
+│                      │             │ ├─ analyzeMood   情绪分析                   │
+│                      │             │ └─ renderDramaCard 卡片渲染                │
+│                      │             │ ↓                                        │
+│                      │             │ Agent Step 可视化 + 引用溯源 + Token 追踪  │
+└──────────────────────┘             └──────────────────────────────────────────┘
+```
+
+## Phase 1: TMDB Tool Calling + Agent 架构（方案三）
+
+**核心变化：** 过程式路由 → ToolLoopAgent 自主编排
+
+| 文件 | 变化 |
+|------|------|
+| `route.ts` | **200 行 → 17 行** — 删除所有手动编排 |
+| `src/lib/tmdb.ts` | 新建 — TMDB API 客户端（搜索/详情/热播/演员/海报） |
+| `src/lib/tools/tmdbSearch.ts` | 新建 — 按关键词/类型/年份搜索 |
+| `src/lib/tools/tmdbGetDetails.ts` | 新建 — 详情+演员表+海报 |
+| `src/lib/tools/tmdbGetTrending.ts` | 新建 — 热播榜（日/周） |
+| `src/lib/tools/tmdbGetByActor.ts` | 新建 — 按演员搜作品 |
+| `src/lib/agent.ts` | 重写 — ToolLoopAgent + 8 个工具 |
+
+## Phase 2: RAG 语义检索（方案四）
+
+**无外部依赖的向量检索管道：** 自己实现余弦相似度，展示 RAG 数学原理
+
+| 文件 | 说明 |
+|------|------|
+| `src/lib/rag/vector-store.ts` | Float32Array + cosineSimilarity + JSON 持久化 |
+| `src/lib/rag/indexer.ts` | DRAMA_DB → 智谱 embedding-3 → 向量化 |
+| `src/lib/rag/retriever.ts` | embed(query) → 余弦相似度 → top-k |
+| `src/lib/rag/seed.ts` | `bun run rag:seed` 生成索引 |
+| `src/lib/tools/ragSearch.ts` | Agent 语义搜索工具 |
+
+**ragSearch vs tmdbSearch 选择：**
+- `ragSearch`：情绪/氛围描述（"甜甜的治愈系"）
+- `tmdbSearch`：精确条件（剧名、年份、类型）
+
+## Phase 3: 生产级工程
+
+### 数据库（Drizzle ORM + SQLite）
+
+| 文件 | 说明 |
+|------|------|
+| `src/lib/db/schema.ts` | sessions/messages/favorites 表 |
+| `src/lib/db/index.ts` | SQLite 连接 + 自动建表 |
+| `src/lib/storage.server.ts` | 服务端 DB 操作（与客户端 localStorage 分离） |
+
+### 安全与可靠性
+
+| 功能 | 实现 |
+|------|------|
+| 限流 | 内存滑动窗口，20次/分钟 |
+| Prompt Injection 防护 | 正则检测常见注入模式 |
+| 输入清理 | 空字符移除 + 长度检查 |
+| 全局错误边界 | `error.tsx` 友好错误 UI |
+| Favorites API | `/api/favorites` CRUD |
+
+### 测试（Vitest）
+
+| 测试文件 | 覆盖 |
+|---------|------|
+| `vector-store.test.ts` | 添加/搜索/排序/清空 6 个用例 |
+| `rate-limit.test.ts` | 允许/阻断/独立 key 3 个用例 |
+| `injection.test.ts` | 正常输入/注入检测/短消息 5 个用例 |
+
+## Phase 4: 高级功能 + 学习计划对齐
+
+### Agent 思考过程可视化（Stage 5）
+
+- **步骤进度条**：编号圆形指示器 + 完成计数（1/3 步完成）
+- **步骤折叠/展开**：中间步骤可展开查看详情，点击切换
+- **Thinking→Action→Observation 链**：每个工具调用显示为一步
+
+### RAG 引用溯源 UI（Stage 4）
+
+- 搜索结果带 `[1]` `[2]` 编号标签
+- 底部标注数据来源（"本地影视知识库（语义匹配）"）
+
+### Prompt Injection 防护（Stage 6）
+
+- 检测 `ignore previous instructions`、`system:`、特殊 token 等模式
+- 短消息（<20字符）跳过检测，避免误伤
+
+### 监控（Stage 6）
+
+| 文件 | 功能 |
+|------|------|
+| `src/lib/monitoring.ts` | 工具调用耗时追踪、平均/最大耗时统计 |
+
+## 与学习计划对应关系
+
+| 阶段 | 学习项 | 实现 |
+|------|--------|------|
+| 3.1 | Function Calling 原理 | 8 个 TMDB/RAG 工具 + ToolLoopAgent |
+| 3.2 | AI SDK Tool Use | `tool()` + `zodSchema()` + `execute()` |
+| 3.3 | 实用工具开发 | tmdbSearch/Details/Trending/Actor/ragSearch/compare |
+| 3.4 | 工具调用 UI | ToolCallDisplay + AgentStepTracker |
+| 4.1 | RAG 流程理解 | embed → vector store → cosine similarity → retrieve |
+| 4.2 | 向量数据库 | 自定义 VectorStore（无依赖） |
+| 4.4 | 引用溯源 | RAG 搜索结果带 [1][2] 编号 + 来源标签 |
+| 5.1 | Agent 思考可视化 | 步骤进度条 + 折叠/展开 |
+| 5.2 | 复杂 UI 状态 | 多步执行进度 + 错误处理 |
+| 6.2 | 安全 | Prompt Injection 防护 + 输入清理 |
+| 6.3 | 可观测性 | 工具调用耗时 + 限流 |
+
+## 新增依赖
+
+| 包 | 用途 |
+|---|------|
+| `drizzle-orm` | SQLite ORM |
+| `better-sqlite3` | SQLite 驱动 |
+| `vitest` | 单元测试框架 |
+
+## 使用前准备
+
+1. 添加 TMDB API Key：`TMDB_API_KEY=xxx` 到 `.env.local`
+2. 生成 RAG 索引：`bun run rag:seed`
+3. 启动开发：`bun run dev`
+
+---
+
 # v0.3.0 — 智谱联网搜索：替代本地数据源
 
 > 集成智谱 `web_search` 联网搜索，让 AI 能搜索最新上映的电视剧，不再依赖本地硬编码数据库。

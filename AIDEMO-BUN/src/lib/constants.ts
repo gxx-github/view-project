@@ -32,4 +32,10 @@ export const TOOL_LABELS: Record<string, string> = {
   "tool-getTrending": "获取榜单中",
   "tool-renderDramaCard": "生成推荐卡片中",
   "tool-webSearch": "联网搜索中",
+  "tool-tmdbSearch": "搜索影视中",
+  "tool-tmdbGetDetails": "查询详情中",
+  "tool-tmdbGetTrending": "获取热播榜中",
+  "tool-tmdbGetByActor": "搜索演员作品中",
+  "tool-ragSearch": "语义搜索中",
+  "tool-compareDramas": "对比分析中",
 };
